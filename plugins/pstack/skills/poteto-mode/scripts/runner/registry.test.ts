@@ -104,14 +104,17 @@ describe("registry data", () => {
       ["gemini-3.8-flash", "high"],
       ["composer-2.5", "default"],
       ["gemini-3.7-flash", "high"],
+      ["glm-5.3", "max"],
+      ["glm-5.3-flash", "max"],
+      ["glm-5-turbo", "default"],
     ]);
     expect(REGISTRY.families.filter((entry) => entry.provider === "claude").map((entry) => [entry.name, entry.model]))
-      .toEqual([["fable", "fable"], ["opus", "opus"], ["sonnet", "sonnet"], ["opus-5-5", "claude-opus-5-5"], ["haiku-5-5", "claude-haiku-5-5"]]);
+      .toEqual([["fable", "fable"], ["opus", "opus"], ["sonnet", "sonnet"], ["opus-5-5", "claude-opus-5-5"], ["haiku-5-5", "claude-haiku-5-5"], ["glm-5.3", "glm-5.3"]]);
     expect(REGISTRY.families.filter((entry) => entry.rolling !== undefined)
       .map((entry) => [entry.name, entry.rolling!.revisionPrefix]))
       .toEqual([["fable", "claude-fable-"], ["opus", "claude-opus-"], ["sonnet", "claude-sonnet-"]]);
     expect(REGISTRY.families.filter((entry) => entry.provider === "codex").map((entry) => [entry.name, entry.model]))
-      .toEqual([["sol", "gpt-6.1-sol"], ["luna", "gpt-6-luna"]]);
+      .toEqual([["sol", "gpt-6.1-sol"], ["luna", "gpt-6-luna"], ["glm-5.3-flash", "glm-5.3-flash"], ["glm-5-turbo", "glm-5-turbo"]]);
     expect(REGISTRY.families.filter((entry) => effortsOf(entry).includes("ultra")).map((entry) => entry.name)).toEqual(["sol"]);
   });
 
