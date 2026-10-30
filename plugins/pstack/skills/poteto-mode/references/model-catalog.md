@@ -25,9 +25,8 @@ Model and provider facts for [`provider-dispatch.md`](provider-dispatch.md), whi
 | gemini-3.8-flash | Gemini 3.8 Flash (Antigravity) | agy | gemini-3.8-flash | high | low medium high | - | optional | - |
 | composer-2.5 | Composer 2.5 (Cursor) | cursor | composer-2.5 | default | default | - | optional | - |
 | gemini-3.7-flash | Gemini 3.7 Flash (Cursor) | cursor | gemini-3.7-flash | high | low medium high | - | optional | - |
-| glm-5.3 | GLM 5.3 | claude | glm-5.3 | max | low high max | `pstack-glm-5.3-<effort>` | optional | - |
-| glm-5.3-flash | GLM 5.3 Flash (Codex) | codex | glm-5.3-flash | max | low high max | - | optional | - |
-| glm-5-turbo | GLM 5 Turbo (Codex) | codex | glm-5-turbo | default | default | - | optional | - |
+| glm-claude | GLM 5.3 (Claude) | claude | glm-5.3 | max | low high max | `pstack-glm-5.3-<effort>` | optional | - |
+| glm-opencode | GLM 5.3 (Opencode) | opencode | glm-5.3 | max | low high max | - | optional | - |
 
 A family is `default` when a role default names it and `optional` otherwise. A Claude-native agent exists for each selectable effort of a Claude family.
 

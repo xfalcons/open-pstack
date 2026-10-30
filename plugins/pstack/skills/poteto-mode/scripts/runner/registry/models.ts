@@ -166,8 +166,8 @@ export const FAMILIES = [
     upstream: null,
   }),
   family({
-    name: "glm-5.3",
-    label: "GLM 5.3",
+    name: "glm-claude",
+    label: "GLM 5.3 (Claude)",
     provider: "claude",
     model: "glm-5.3",
     // Z.ai GLM-5.3 docs: reasoning is always on; low/high/max only; text-only input; 1M context.
@@ -176,23 +176,13 @@ export const FAMILIES = [
     upstream: null,
   }),
   family({
-    name: "glm-5.3-flash",
-    label: "GLM 5.3 Flash (Codex)",
-    provider: "codex",
-    model: "glm-5.3-flash",
+    name: "glm-opencode",
+    label: "GLM 5.3 (Opencode)",
+    provider: "opencode",
+    model: "glm-5.3",
     // Z.ai coding-plan model list via Codex: low/high/max; text+image input; 1M context.
     efforts: ["low", "high", "max"],
     defaultEffort: "max",
-    upstream: null,
-  }),
-  family({
-    name: "glm-5-turbo",
-    label: "GLM 5 Turbo (Codex)",
-    provider: "codex",
-    model: "glm-5-turbo",
-    // Z.ai coding-plan model list via Codex: no selectable reasoning levels; text-only; 200K context.
-    efforts: ["default"],
-    defaultEffort: "default",
     upstream: null,
   }),
 ] as const;
@@ -239,7 +229,6 @@ export const RELEASED_PAIRS = [
   { pair: "cursor:composer-2.5", family: "composer-2.5" },
   { pair: "cursor:gemini-3.7-flash", family: "gemini-3.7-flash" },
   { pair: "claude:claude-haiku-5-5", family: "haiku-5-5" },
-  { pair: "claude:glm-5.3", family: "glm-5.3" },
-  { pair: "codex:glm-5.3-flash", family: "glm-5.3-flash" },
-  { pair: "codex:glm-5-turbo", family: "glm-5-turbo" },
+  { pair: "claude:glm-5.3", family: "glm-claude" },
+  { pair: "opencode:glm-5.3", family: "glm-opencode" },
 ] as const satisfies readonly ReleasedPair<FamilyName>[];
