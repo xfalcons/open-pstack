@@ -179,7 +179,7 @@ export const FAMILIES = [
     name: "glm-opencode",
     label: "GLM 5.3 (Opencode)",
     provider: "opencode",
-    model: "glm-5.3",
+    model: "opencode:zai-coding-plan/glm-5.3",
     // Z.ai coding-plan model list via Codex: low/high/max; text+image input; 1M context.
     efforts: ["low", "high", "max"],
     defaultEffort: "max",
