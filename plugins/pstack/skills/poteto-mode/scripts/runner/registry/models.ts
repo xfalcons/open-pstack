@@ -230,5 +230,5 @@ export const RELEASED_PAIRS = [
   { pair: "cursor:gemini-3.7-flash", family: "gemini-3.7-flash" },
   { pair: "claude:claude-haiku-5-5", family: "haiku-5-5" },
   { pair: "claude:glm-5.3", family: "glm-claude" },
-  { pair: "opencode:glm-5.3", family: "glm-opencode" },
+  { pair: "opencode:zai-coding-plan/glm-5.3-flash", family: "glm-opencode" },
 ] as const satisfies readonly ReleasedPair<FamilyName>[];
