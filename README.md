@@ -51,7 +51,7 @@ You need a current Claude Code or Codex installation. For the default three-mode
 Run these commands inside Claude Code:
 
 ```text
-/plugin marketplace add ericlitman/open-pstack
+/plugin marketplace add kevin/open-pstack#kevin
 /plugin install pstack@open-pstack
 /reload-plugins
 ```
@@ -63,7 +63,7 @@ Claude Code leaves auto-update off for third-party marketplaces, so Open Pstack 
 Run these commands in your shell:
 
 ```shell
-codex plugin marketplace add ericlitman/open-pstack --ref main
+codex plugin marketplace add xfalcons/open-pstack --ref kevin
 codex plugin add pstack@open-pstack
 ```
 
