@@ -10,8 +10,8 @@ Model and provider facts for [`provider-dispatch.md`](provider-dispatch.md), whi
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | fable | Fable | claude | fable | max | low medium high xhigh max | `pstack-fable-<effort>` | optional | - |
 | sol | GPT-6.1 Sol | codex | gpt-6.1-sol | max | low medium high xhigh max ultra | - | default | gpt-6.1-terra-max |
-| grok | Grok 4.7 | grok | grok-4.7 | xhigh | low medium high xhigh max | - | default | grok-4.7-xhigh-fast |
-| opus | Opus | claude | opus | max | low medium high xhigh max | `pstack-opus-<effort>` | default | opus |
+| grok | Grok 4.7 | grok | grok-4.7 | xhigh | low medium high xhigh max | - | optional | grok-4.7-xhigh-fast |
+| opus | Opus | claude | opus | max | low medium high xhigh max | `pstack-opus-<effort>` | optional | opus |
 | luna | GPT-6 Luna | codex | gpt-6-luna | max | low medium high xhigh max | - | optional | - |
 | sonnet | Sonnet | claude | sonnet | max | low medium high xhigh max | `pstack-sonnet-<effort>` | optional | - |
 | opus-5-5 | Opus 5.5 | claude | claude-opus-5-5 | max | low medium high xhigh max | `pstack-opus-5-5-<effort>` | optional | claude-opus-5-5-xhigh |
@@ -25,8 +25,8 @@ Model and provider facts for [`provider-dispatch.md`](provider-dispatch.md), whi
 | gemini-3.8-flash | Gemini 3.8 Flash (Antigravity) | agy | gemini-3.8-flash | high | low medium high | - | optional | - |
 | composer-2.5 | Composer 2.5 (Cursor) | cursor | composer-2.5 | default | default | - | optional | - |
 | gemini-3.7-flash | Gemini 3.7 Flash (Cursor) | cursor | gemini-3.7-flash | high | low medium high | - | optional | - |
-| glm-claude | GLM 5.3 (Claude) | claude | glm-5.3 | max | low high max | `pstack-glm-5.3-<effort>` | optional | - |
-| glm-opencode | GLM 5.3 (Opencode) | opencode | opencode:zai-coding-plan/glm-5.3 | max | low high max | - | optional | - |
+| glm-claude | GLM 5.3 (Claude) | claude | glm-5.3 | max | low high max | `pstack-glm-5.3-<effort>` | default | - |
+| glm-opencode | GLM 5.3 Flash (Opencode) | opencode | opencode:zai-coding-plan/glm-5.3-flash | max | low high max | - | default | - |
 
 A family is `default` when a role default names it and `optional` otherwise. A Claude-native agent exists for each selectable effort of a Claude family.
 
