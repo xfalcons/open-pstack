@@ -50,7 +50,7 @@ You need a current Claude Code or Codex installation. For the default three-mode
 Run these commands inside Claude Code:
 
 ```text
-/plugin marketplace add kevin/open-pstack#kevin
+/plugin marketplace add xfalcons/open-pstack#kevin
 /plugin install pstack@open-pstack
 /reload-plugins
 ```
