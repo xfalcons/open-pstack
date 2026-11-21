@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__codebase-memory-mcp__list_projects",
+      "Bash(bun runner/registry/render.ts --write)",
+      "Bash(bun test *)",
+      "Bash(bun install *)",
+      "Bash(bun run *)"
+    ]
+  }
+}
