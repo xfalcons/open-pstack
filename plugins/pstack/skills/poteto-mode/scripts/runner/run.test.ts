@@ -325,13 +325,21 @@ afterEach(() => {
 
 describe("Codex parent sandbox diagnostics", () => {
   let previousNetworkDisabled: string | undefined;
+  let previousForceColor: string | undefined;
 
   beforeEach(() => {
     previousNetworkDisabled = process.env.CODEX_SANDBOX_NETWORK_DISABLED;
+    previousForceColor = process.env.FORCE_COLOR;
     delete process.env.CODEX_SANDBOX_NETWORK_DISABLED;
+    process.env.FORCE_COLOR = "1";
   });
 
   afterEach(() => {
+    if (previousForceColor === undefined) {
+      delete process.env.FORCE_COLOR;
+    } else {
+      process.env.FORCE_COLOR = previousForceColor;
+    }
     if (previousNetworkDisabled === undefined) {
       delete process.env.CODEX_SANDBOX_NETWORK_DISABLED;
     } else {
@@ -352,7 +360,7 @@ writeFileSync(${JSON.stringify(invoked)}, JSON.stringify({
   argv: process.argv.slice(2),
   networkDisabled: process.env.CODEX_SANDBOX_NETWORK_DISABLED ?? null,
 }));
-console.error("ENOTFOUND api.anthropic.com");
+process.stderr.write("ENOTFOUND api.anthropic.com\\n");
 process.exit(1);
 `);
     const input = options("claude");
@@ -386,7 +394,7 @@ if (process.argv[2] === "auth") {
   console.log(JSON.stringify({ loggedIn: true }));
   process.exit(0);
 }
-console.error("ENOTFOUND api.anthropic.com; EACCES local-state");
+process.stderr.write("ENOTFOUND api.anthropic.com; EACCES local-state\\n");
 process.exit(1);
 `);
       const result = await runLane(laneOf(options("claude")));
