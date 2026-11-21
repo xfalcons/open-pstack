@@ -9,9 +9,9 @@ Model and provider facts for [`provider-dispatch.md`](provider-dispatch.md), whi
 | Family | Label | Provider | Model | Default effort | Selectable efforts | Claude-native agents | Status | Upstream pstack choice |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | fable | Fable | claude | fable | max | low medium high xhigh max | `pstack-fable-<effort>` | optional | - |
-| sol | GPT-6.1 Sol | codex | gpt-6.1-sol | max | low medium high xhigh max ultra | - | default | gpt-6.1-terra-max |
-| grok | Grok 4.7 | grok | grok-4.7 | xhigh | low medium high xhigh max | - | optional | grok-4.7-xhigh-fast |
-| opus | Opus | claude | opus | max | low medium high xhigh max | `pstack-opus-<effort>` | optional | opus |
+| sol | GPT-6.1 Sol | codex | gpt-6.1-sol | max | low medium high xhigh max ultra | - | default | gpt-5.6-sol-max |
+| grok | Grok 4.7 | grok | grok-4.7 | xhigh | low medium high xhigh max | - | default | grok-4.7-xhigh-fast |
+| opus | Opus | claude | opus | max | low medium high xhigh max | `pstack-opus-<effort>` | default | opus |
 | luna | GPT-6 Luna | codex | gpt-6-luna | max | low medium high xhigh max | - | optional | - |
 | astra | GPT-6 Astra | codex | gpt-6-astra | max | low medium high xhigh max ultra | - | optional | - |
 | sonnet | Sonnet | claude | sonnet | max | low medium high xhigh max | `pstack-sonnet-<effort>` | optional | - |
@@ -26,8 +26,8 @@ Model and provider facts for [`provider-dispatch.md`](provider-dispatch.md), whi
 | gemini-3.8-flash | Gemini 3.8 Flash (Antigravity) | agy | gemini-3.8-flash | high | low medium high | - | optional | - |
 | composer-2.5 | Composer 2.5 (Cursor) | cursor | composer-2.5 | default | default | - | optional | - |
 | gemini-3.7-flash | Gemini 3.7 Flash (Cursor) | cursor | gemini-3.7-flash | high | low medium high | - | optional | - |
-| glm-claude | GLM 5.3 (Claude) | claude | glm-5.3 | max | low high max | `pstack-glm-5.3-<effort>` | default | - |
-| glm-opencode | GLM 5.3 Flash (Opencode) | opencode | zai-coding-plan/glm-5.3-flash | max | low high max | - | default | - |
+| glm-claude | GLM 5.3 (Claude) | claude | glm-5.3 | max | low high max | `pstack-glm-claude-<effort>` | optional | - |
+| glm-opencode | GLM 5.3 Flash (Opencode) | opencode | zai-coding-plan/glm-5.3-flash | max | low high max | - | optional | - |
 
 A family is `default` when a role default names it and `optional` otherwise. A Claude-native agent exists for each selectable effort of a Claude family.
 
@@ -52,7 +52,7 @@ Effort in the model ID: for these families the effort selects the CLI model, and
 
 | Provider | Kept model | Family | Current model | Selectable efforts |
 | --- | --- | --- | --- | --- |
-| codex | gpt-6.1-terra | sol | gpt-6.1-sol | low medium high xhigh max ultra |
+| codex | gpt-5.6-sol | sol | gpt-6.1-sol | low medium high xhigh max ultra |
 | grok | grok-4.6 | grok | grok-4.7 | low medium high xhigh max |
 
 Rolling aliases:
