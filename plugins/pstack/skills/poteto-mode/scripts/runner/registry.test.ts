@@ -86,7 +86,7 @@ describe("registry data", () => {
     }
   });
 
-  it("keeps the default efforts, the Claude rolling aliases, and ultra on Sol and Astra", () => {
+  it("keeps the default efforts, the Claude rolling aliases, and ultra on Sol, Astra and Terra", () => {
     expect(REGISTRY.families.map((entry) => [entry.name, entry.defaultEffort])).toEqual([
       ["fable", "max"],
       ["sol", "max"],
@@ -94,6 +94,7 @@ describe("registry data", () => {
       ["opus", "max"],
       ["luna", "max"],
       ["astra", "max"],
+      ["terra", "max"],
       ["sonnet", "max"],
       ["opus-5-5", "max"],
       ["haiku-5-5", "max"],
@@ -115,10 +116,10 @@ describe("registry data", () => {
       .map((entry) => [entry.name, entry.rolling!.revisionPrefix]))
       .toEqual([["fable", "claude-fable-"], ["opus", "claude-opus-"], ["sonnet", "claude-sonnet-"]]);
     expect(REGISTRY.families.filter((entry) => entry.provider === "codex").map((entry) => [entry.name, entry.model]))
-      .toEqual([["sol", "gpt-6.1-sol"], ["luna", "gpt-6-luna"], ["astra", "gpt-6-astra"]]);
+      .toEqual([["sol", "gpt-6.1-sol"], ["luna", "gpt-6-luna"], ["astra", "gpt-6.2-astra"], ["terra", "gpt-6.1-terra"]]);
     expect(REGISTRY.families.filter((entry) => entry.provider === "opencode").map((entry) => [entry.name, entry.model]))
-      .toEqual([["deepseek-v4.1-flash-free", "opencode/deepseek-v4.1-flash-free"], ["glm-opencode", "zai-coding-plan/glm-5.3-flash"]]);
-    expect(REGISTRY.families.filter((entry) => effortsOf(entry).includes("ultra")).map((entry) => entry.name)).toEqual(["sol", "astra"]);
+      .toEqual([["deepseek-v4.1-flash-free", "opencode/deepseek-v4.1-flash-free"], ["glm-opencode", "zai-coding-plan/glm-5.3"]]);
+    expect(REGISTRY.families.filter((entry) => effortsOf(entry).includes("ultra")).map((entry) => entry.name)).toEqual(["sol", "astra", "terra"]);
   });
 
   it("keeps family names and (provider, model) pairs unique, and efforts ordered", () => {
@@ -499,12 +500,46 @@ describe("resolveLane", () => {
       .toThrow("effort ultra is not offered for claude:sonnet");
   });
 
-  it("resolves Astra at max by default and passes ultra to Codex", () => {
-    const astra = resolveLane(request({ parent: "claude", provider: "codex", model: "gpt-6-astra" }));
-    expect([astra.family?.name, astra.effort]).toEqual(["astra", "max"]);
-    const ultra = resolveLane(request({ parent: "claude", provider: "codex", model: "gpt-6-astra", effort: "ultra" }));
-    expect(ultra.adapter.launch.argv(ultra, { sharedGitDir: null, providerSidecar: null }))
-      .toEqual(expect.arrayContaining(["gpt-6-astra", 'model_reasoning_effort="ultra"']));
+  it("resolves Astra at max by default and passes every supported effort to Codex", () => {
+    const astraRequest = { parent: "claude", provider: "codex", model: "gpt-6.2-astra" };
+    const astra = resolveLane(request(astraRequest));
+    expect([astra.family?.name, astra.family?.label, astra.effort])
+      .toEqual(["astra", "GTP-6.2 Astra", "max"]);
+    for (const effort of ["low", "medium", "high", "xhigh", "max", "ultra"]) {
+      const lane = resolveLane(request({ ...astraRequest, effort }));
+      expect(lane.adapter.launch.argv(lane, { sharedGitDir: null, providerSidecar: null }))
+        .toEqual(expect.arrayContaining(["--model", "gpt-6.2-astra", `model_reasoning_effort="${effort}"`]));
+    }
+    expect(() => resolveLane(request({ ...astraRequest, effort: "default" })))
+      .toThrow("effort default is not offered for codex:gpt-6.2-astra");
+  });
+
+  it("resolves Terra at max by default and passes every supported effort to Codex", () => {
+    const terraRequest = { parent: "claude", provider: "codex", model: "gpt-6.1-terra" };
+    const terra = resolveLane(request(terraRequest));
+    expect([terra.family?.name, terra.family?.label, terra.effort])
+      .toEqual(["terra", "GPT-6.1 Terra", "max"]);
+    for (const effort of ["low", "medium", "high", "xhigh", "max", "ultra"]) {
+      const lane = resolveLane(request({ ...terraRequest, effort }));
+      expect(lane.adapter.launch.argv(lane, { sharedGitDir: null, providerSidecar: null }))
+        .toEqual(expect.arrayContaining(["--model", "gpt-6.1-terra", `model_reasoning_effort="${effort}"`]));
+    }
+    expect(() => resolveLane(request({ ...terraRequest, effort: "default" })))
+      .toThrow("effort default is not offered for codex:gpt-6.1-terra");
+  });
+
+  it("resolves GLM 5.3 and passes its model and supported efforts to OpenCode", () => {
+    const glmRequest = { provider: "opencode", model: "zai-coding-plan/glm-5.3" };
+    const glm = resolveLane(request(glmRequest));
+    expect([glm.family?.name, glm.family?.label, glm.effort])
+      .toEqual(["glm-opencode", "GLM 5.3 (Opencode)", "max"]);
+    for (const effort of ["low", "high", "max"]) {
+      const lane = resolveLane(request({ ...glmRequest, effort }));
+      expect(lane.adapter.launch.argv(lane, { sharedGitDir: null, providerSidecar: null }))
+        .toEqual(expect.arrayContaining(["-m", "zai-coding-plan/glm-5.3", "--variant", effort]));
+    }
+    expect(() => resolveLane(request({ ...glmRequest, effort: "medium" })))
+      .toThrow("effort medium is not offered for opencode:zai-coding-plan/glm-5.3");
   });
 
   it("maps each Devin effort to its CLI model ID and keeps the descriptor's model for the receipt", () => {

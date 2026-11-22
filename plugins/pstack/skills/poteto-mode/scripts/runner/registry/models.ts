@@ -55,10 +55,19 @@ export const FAMILIES = [
   }),
   family({
     name: "astra",
-    label: "GPT-6 Astra",
+    label: "GTP-6.2 Astra",
     provider: "codex",
-    model: "gpt-6-astra",
-    efforts: UP_TO_ULTRA, // `codex debug models`, Codex CLI 0.164.0
+    model: "gpt-6.2-astra",
+    efforts: UP_TO_ULTRA,
+    defaultEffort: "max",
+    upstream: null,
+  }),
+  family({
+    name: "terra",
+    label: "GPT-6.1 Terra",
+    provider: "codex",
+    model: "gpt-6.1-terra",
+    efforts: UP_TO_ULTRA,
     defaultEffort: "max",
     upstream: null,
   }),
@@ -186,9 +195,9 @@ export const FAMILIES = [
   }),
   family({
     name: "glm-opencode",
-    label: "GLM 5.3 Flash (Opencode)",
+    label: "GLM 5.3 (Opencode)",
     provider: "opencode",
-    model: "zai-coding-plan/glm-5.3-flash",
+    model: "zai-coding-plan/glm-5.3",
     // Z.ai coding-plan model list via Codex: low/high/max; text+image input; 1M context.
     efforts: ["low", "high", "max"],
     defaultEffort: "max",
@@ -238,7 +247,8 @@ export const RELEASED_PAIRS = [
   { pair: "cursor:composer-2.5", family: "composer-2.5" },
   { pair: "cursor:gemini-3.7-flash", family: "gemini-3.7-flash" },
   { pair: "claude:claude-haiku-5-5", family: "haiku-5-5" },
-  { pair: "codex:gpt-6-astra", family: "astra" },
+  { pair: "codex:gpt-6.2-astra", family: "astra" },
   { pair: "claude:glm-5.3", family: "glm-claude" },
-  { pair: "opencode:zai-coding-plan/glm-5.3-flash", family: "glm-opencode" },
+  { pair: "opencode:zai-coding-plan/glm-5.3", family: "glm-opencode" },
+  { pair: "codex:gpt-6.1-terra", family: "terra" },
 ] as const satisfies readonly ReleasedPair<FamilyName>[];
