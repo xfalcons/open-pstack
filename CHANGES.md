@@ -3,6 +3,12 @@
 Open Pstack lands on green: Mergify merges a ready PR to main once verify and exact-head live-gate pass and no review thread is unresolved, and a workflow resolves Unfret's own threads. A PR that touches `.github/` or the Mergify config also waits for Unfret, and workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.21.1 updates the model catalog
+
+Open Pstack 1.21.1 keeps the Cursor pstack 0.15.36 sync. Default roles and panels are unchanged.
+
+**Model catalog (#301, #305, #306).** Adds the optional Terra family with label `GPT-6.1 Terra` and model `gpt-6.1-terra`. Astra uses model `gpt-6.2-astra` and the requested label `GTP-6.2 Astra`. The OpenCode GLM family uses `zai-coding-plan/glm-5.3` with label `GLM 5.3 (Opencode)`. The generated catalog and tests cover the updated models and their supported efforts.
+
 ## 1.21.0 adds Grok as a parent harness
 
 Open Pstack 1.21.0 keeps the Cursor pstack 0.15.36 sync. Default roles and panels are unchanged.
