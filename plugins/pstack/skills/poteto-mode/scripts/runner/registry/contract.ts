@@ -98,7 +98,11 @@ export type EnvPolicy =
     readonly prefixes: readonly string[];
     readonly set?: Readonly<Record<string, string>>;
   }
-  | { readonly kind: "inherit"; readonly dropPrefixes: readonly string[] };
+  | {
+    readonly kind: "inherit";
+    readonly dropPrefixes: readonly string[];
+    readonly defaults?: Readonly<Record<string, string>>;
+  };
 
 export interface LaunchFacts {
   readonly sharedGitDir: string | null;
@@ -140,7 +144,7 @@ export interface ProviderAdapter {
     readonly report: "required" | "absent";
     matches(lane: Lane, reported: string): boolean;
   };
-  environment(access: Access, sidecarDir: string | null): EnvPolicy;
+  environment(access: Access, sidecarDir: string | null, source?: Readonly<NodeJS.ProcessEnv>): EnvPolicy;
   readonly docs: {
     readonly name: string;
     readonly hostPrerequisites: readonly string[];

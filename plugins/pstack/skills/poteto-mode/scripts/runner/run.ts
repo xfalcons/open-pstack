@@ -173,12 +173,13 @@ export function childEnvironment(
   lane: Lane,
   source: NodeJS.ProcessEnv = process.env
 ): NodeJS.ProcessEnv {
-  const policy = lane.adapter.environment(lane.access, providerSidecar(lane)?.facts.directory ?? null);
+  const policy = lane.adapter.environment(lane.access, providerSidecar(lane)?.facts.directory ?? null, source);
   const keep = policy.kind === "allowlist"
     ? (key: string) => policy.names.includes(key) || policy.prefixes.some((prefix) => key.startsWith(prefix))
     : (key: string) => !policy.dropPrefixes.some((prefix) => key.startsWith(prefix));
   const result = {
-    ...Object.fromEntries(Object.entries(source).filter(([key]) => keep(key))),
+    ...(policy.kind === "inherit" ? policy.defaults : undefined),
+    ...Object.fromEntries(Object.entries(source).filter(([key, value]) => value !== undefined && keep(key))),
     ...(policy.kind === "allowlist" ? policy.set : undefined),
   };
   for (const key of PARENTS[lane.parent].identity) delete result[key];

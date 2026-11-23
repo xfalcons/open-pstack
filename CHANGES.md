@@ -3,6 +3,12 @@
 Open Pstack lands on green: Mergify merges a ready PR to main once verify and exact-head live-gate pass and no review thread is unresolved, and a workflow resolves Unfret's own threads. A PR that touches `.github/` or the Mergify config also waits for Unfret, and workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.21.2 loads Claude connection settings for runner children
+
+Open Pstack 1.21.2 keeps the Cursor pstack 0.15.36 sync. Default roles and panels are unchanged.
+
+**Claude connection settings (#307).** The runner reads only `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` from `env` in the Claude config home's `settings.json` when those process environment values are missing. Both the authentication preflight and the model process receive them through their environment. `CLAUDE_CONFIG_DIR` is honored, explicit environment values take precedence, and malformed settings produce errors without their contents. Project-only settings, strict MCP configuration, tool restrictions, and writer isolation remain in place. Connection values are not added to arguments or receipts.
+
 ## 1.21.1 updates the model catalog
 
 Open Pstack 1.21.1 keeps the Cursor pstack 0.15.36 sync. Default roles and panels are unchanged.

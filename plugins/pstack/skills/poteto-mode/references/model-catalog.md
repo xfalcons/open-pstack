@@ -89,6 +89,7 @@ The runner refuses an access mode outside a provider's Access modes cell before 
 - Host prerequisites: none.
 - State paths: the Claude config home (`CLAUDE_CONFIG_DIR`, else `~/.claude`).
 - Child environment: read-only: inherited; isolated-write: inherited without `GIT_*`.
+- For missing process environment values, the runner reads only `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` from `env` in the Claude config home's `settings.json`. Both the authentication preflight and the model process receive these values through their environment. The model keeps project-only settings, strict MCP configuration, and the existing tool restrictions; no other user settings are imported. Connection values are never added to argv or the receipt.
 
 ### codex: Codex CLI
 

@@ -28,6 +28,8 @@ import type { AccessKind, RunnerReceipt } from "./types.ts";
 let scratch = "";
 let bin = "";
 let previousPath: string | undefined;
+const CLAUDE_ENVIRONMENT = ["CLAUDE_CONFIG_DIR", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"] as const;
+let previousClaudeEnvironment: NodeJS.ProcessEnv;
 
 function streamPath(path: string | null): string {
   if (path === null) throw new Error("expected a reserved stream artifact path");
@@ -269,6 +271,9 @@ beforeEach(() => {
   writeFileSync(join(scratch, "prompt.md"), "Return the marker.");
   for (const name of ["claude", "codex", "grok"]) makeExecutable(name);
   previousPath = process.env.PATH;
+  previousClaudeEnvironment = Object.fromEntries(CLAUDE_ENVIRONMENT.map((key) => [key, process.env[key]]));
+  for (const key of CLAUDE_ENVIRONMENT) delete process.env[key];
+  process.env.CLAUDE_CONFIG_DIR = join(scratch, "claude-config");
   process.env.PATH = `${bin}:${dirname(process.execPath)}:${previousPath ?? ""}`;
   delete process.env.GROK_FAKE_TIMEOUT;
   delete process.env.GROK_FAKE_INVALID_MODEL;
@@ -297,6 +302,10 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env.PATH = previousPath;
+  for (const key of CLAUDE_ENVIRONMENT) {
+    if (previousClaudeEnvironment[key] === undefined) delete process.env[key];
+    else process.env[key] = previousClaudeEnvironment[key];
+  }
   delete process.env.GROK_FAKE_TIMEOUT;
   delete process.env.GROK_FAKE_INVALID_MODEL;
   delete process.env.GROK_FAKE_CANCEL;
@@ -1944,6 +1953,131 @@ process.stdout.write(await Bun.stdin.text());
 });
 
 describe("childEnvironment", () => {
+  it("loads only Claude connection variables from user settings in both access modes", () => {
+    const home = join(scratch, "home");
+    const config = join(home, ".claude");
+    mkdirSync(config, { recursive: true });
+    writeFileSync(join(config, "settings.json"), JSON.stringify({
+      env: {
+        ANTHROPIC_BASE_URL: "https://glm.example.test/anthropic",
+        ANTHROPIC_AUTH_TOKEN: "test-glm-token",
+        SHOULD_NOT_LOAD: "unrelated-setting",
+        CODEX_THREAD_ID: "must-not-restore-parent",
+        GIT_DIR: "/must-not-restore-git",
+      },
+      hooks: { SessionStart: [{ hooks: [{ type: "command", command: "exit 1" }] }] },
+    }));
+    const source = { HOME: home, PATH: "/bin", CODEX_THREAD_ID: "parent" };
+    for (const mode of ["read-only", "isolated-write"]) {
+      expect(childEnvironment(laneOf({ ...options("claude"), mode }), source)).toEqual({
+        HOME: home,
+        PATH: "/bin",
+        ANTHROPIC_BASE_URL: "https://glm.example.test/anthropic",
+        ANTHROPIC_AUTH_TOKEN: "test-glm-token",
+      });
+    }
+    expect(childEnvironment(laneOf(options("codex")), source)).toEqual(source);
+  });
+
+  it("honors the redirected Claude config home and explicit connection environment", () => {
+    const config = join(scratch, "redirected Claude config");
+    mkdirSync(config);
+    writeFileSync(join(config, "settings.json"), JSON.stringify({
+      env: { ANTHROPIC_BASE_URL: "https://settings.example.test", ANTHROPIC_AUTH_TOKEN: "settings-token" },
+    }));
+    const source = {
+      HOME: scratch,
+      CLAUDE_CONFIG_DIR: config,
+      ANTHROPIC_BASE_URL: "https://explicit.example.test",
+    };
+    expect(childEnvironment(laneOf(options("claude")), source)).toEqual({
+      ...source,
+      ANTHROPIC_AUTH_TOKEN: "settings-token",
+    });
+    const explicit = { ...source, ANTHROPIC_AUTH_TOKEN: "explicit-token" };
+    expect(childEnvironment(laneOf(options("claude")), explicit)).toEqual(explicit);
+    expect(childEnvironment(laneOf(options("claude")), { ...source, ANTHROPIC_AUTH_TOKEN: undefined }))
+      .toEqual({ ...source, ANTHROPIC_AUTH_TOKEN: "settings-token" });
+  });
+
+  it("keeps ordinary Claude login available when no connection settings exist", () => {
+    const source = { HOME: scratch, CLAUDE_CONFIG_DIR: "", PATH: "/bin" };
+    expect(childEnvironment(laneOf(options("claude")), source)).toEqual(source);
+  });
+
+  it("validates Claude settings and connection values without reading them for other providers", () => {
+    const config = join(scratch, "config");
+    mkdirSync(config);
+    const source = { CLAUDE_CONFIG_DIR: config };
+    for (const settings of [[], { env: [] }, { env: "invalid" }, { env: { ANTHROPIC_AUTH_TOKEN: 42 } }]) {
+      writeFileSync(join(config, "settings.json"), JSON.stringify(settings));
+      expect(() => childEnvironment(laneOf(options("claude")), source)).toThrow("Claude connection settings");
+      expect(childEnvironment(laneOf(options("codex")), source)).toEqual(source);
+    }
+    for (const settings of [{}, { env: {} }]) {
+      writeFileSync(join(config, "settings.json"), JSON.stringify(settings));
+      expect(childEnvironment(laneOf(options("claude")), source)).toEqual(source);
+    }
+  });
+
+  it("fails closed on an unreadable Claude settings file without including its path", () => {
+    const config = join(scratch, "private-config-path");
+    mkdirSync(join(config, "settings.json"), { recursive: true });
+    expect(() => childEnvironment(laneOf(options("claude")), { CLAUDE_CONFIG_DIR: config }))
+      .toThrow("Claude connection settings could not be read");
+  });
+
+  it("rejects malformed Claude connection settings without exposing their contents", async () => {
+    const config = process.env.CLAUDE_CONFIG_DIR!;
+    mkdirSync(config);
+    const secret = "malformed-settings-token-must-not-appear";
+    writeFileSync(join(config, "settings.json"), `{"env":{"ANTHROPIC_AUTH_TOKEN":"${secret}"`);
+    const lane = laneOf({ ...options("claude"), model: "glm-5.3" });
+    const result = await runLane(lane);
+    expect(result.receipt.status).toBe("child-failed");
+    expect(JSON.stringify(result.receipt)).not.toContain(secret);
+    expect(result.receipt.error?.evidence).toContain("Claude connection settings");
+  });
+
+  it("gives Claude preflight and model processes the connection without persisting its token", async () => {
+    const config = process.env.CLAUDE_CONFIG_DIR!;
+    mkdirSync(config);
+    const token = "glm-child-process-token";
+    const endpoint = "https://glm.example.test/anthropic";
+    writeFileSync(join(config, "settings.json"), JSON.stringify({
+      env: { ANTHROPIC_BASE_URL: endpoint, ANTHROPIC_AUTH_TOKEN: token, SHOULD_NOT_LOAD: "unrelated" },
+      hooks: { SessionStart: [{ hooks: [{ type: "command", command: "exit 1" }] }] },
+    }));
+    const stages = join(scratch, "claude-stages.txt");
+    writeFileSync(join(bin, "claude"), `#!/usr/bin/env bun
+import { appendFileSync } from "node:fs";
+const args = process.argv.slice(2);
+const connected = process.env.ANTHROPIC_BASE_URL === ${JSON.stringify(endpoint)}
+  && process.env.ANTHROPIC_AUTH_TOKEN === ${JSON.stringify(token)}
+  && process.env.SHOULD_NOT_LOAD === undefined;
+if (!connected) process.exit(1);
+const preflight = args[0] === "auth";
+appendFileSync(${JSON.stringify(stages)}, preflight ? "preflight\\n" : "model\\n");
+if (preflight) {
+  console.log(JSON.stringify({ loggedIn: true }));
+} else {
+  if (args[args.indexOf("--setting-sources") + 1] !== "project"
+    || !args.includes("--strict-mcp-config")
+    || args[args.indexOf("--tools") + 1] !== "Read,Grep,Glob,Bash"
+    || args[args.indexOf("--disallowed-tools") + 1] !== "Agent,Task,WebSearch,WebFetch,Edit,Write,NotebookEdit") process.exit(2);
+  console.log(JSON.stringify({ result: "GLM_OK", modelUsage: { "glm-5.3": {} } }));
+}
+`);
+    const lane = laneOf({ ...options("claude"), model: "glm-5.3" });
+    const result = await runLane(lane);
+    expect([result.exitCode, result.receipt.status, result.receipt.modelVerified, result.receipt.reportedModel])
+      .toEqual([0, "complete", true, "glm-5.3"]);
+    expect(readFileSync(stages, "utf8")).toBe("preflight\nmodel\n");
+    for (const path of [lane.outputPath, lane.receiptPath, streamPath(result.receipt.stdoutPath), streamPath(result.receipt.stderrPath)]) {
+      expect(readFileSync(path, "utf8")).not.toContain(token);
+    }
+  });
+
   it("applies an adapter's set values after filtering and drops the parent identity markers last", () => {
     const lane = standInLane("stand-in-env");
     const source = { PATH: "/bin", XDG_CONFIG_HOME: "/inherited", XDG_DATA_HOME: "/data", CODEX_THREAD_ID: "parent", GITHUB_TOKEN: "t" };

@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { adapter, isRevision, type Lane, type ParseResult } from "../registry/contract.ts";
-import type { AccessMode } from "../types.ts";
+import { type AccessMode, UsageError } from "../types.ts";
 import {
   effortArgs,
   exactOrSuffixed,
@@ -11,6 +13,42 @@ import {
   object,
   type JsonObject,
 } from "./shared.ts";
+
+const CONNECTION_VARIABLES = ["ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"] as const;
+
+function connectionEnvironment(source: Readonly<NodeJS.ProcessEnv>): Record<string, string> {
+  const missing = CONNECTION_VARIABLES.filter((key) => source[key] === undefined);
+  const configHome = source.CLAUDE_CONFIG_DIR || (source.HOME ? join(source.HOME, ".claude") : null);
+  if (missing.length === 0 || configHome === null) return {};
+
+  let contents: string;
+  try {
+    contents = readFileSync(join(configHome, "settings.json"), "utf8");
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return {};
+    throw new UsageError("Claude connection settings could not be read");
+  }
+
+  let settings: JsonObject | null;
+  try {
+    settings = object(JSON.parse(contents));
+  } catch {
+    throw new UsageError("Claude connection settings must be valid JSON");
+  }
+  if (settings === null) throw new UsageError("Claude connection settings must be an object");
+  if (settings.env === undefined) return {};
+  const configured = object(settings.env);
+  if (configured === null) throw new UsageError("Claude connection settings env must be an object");
+
+  const defaults: Record<string, string> = {};
+  for (const key of missing) {
+    const value = configured[key];
+    if (value === undefined) continue;
+    if (typeof value !== "string") throw new UsageError(`Claude connection settings ${key} must be a string`);
+    defaults[key] = value;
+  }
+  return defaults;
+}
 
 function deniedTools(mode: AccessMode): string {
   const always = ["Agent", "Task", "WebSearch", "WebFetch"];
@@ -126,14 +164,17 @@ export const claude = adapter({
   },
   parse: (run, lane) => parse(run.stdout, lane),
   proof: { report: "required", matches },
-  environment: (access) => ({
+  environment: (access, _sidecarDir, source = {}) => ({
     kind: "inherit",
     dropPrefixes: access.mode === "isolated-write" ? ["GIT_"] : [],
+    defaults: connectionEnvironment(source),
   }),
   docs: {
     name: "Claude Code CLI",
     hostPrerequisites: [],
     statePaths: ["the Claude config home (`CLAUDE_CONFIG_DIR`, else `~/.claude`)"],
-    notes: [],
+    notes: [
+      "For missing process environment values, the runner reads only `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` from `env` in the Claude config home's `settings.json`. Both the authentication preflight and the model process receive these values through their environment. The model keeps project-only settings, strict MCP configuration, and the existing tool restrictions; no other user settings are imported. Connection values are never added to argv or the receipt.",
+    ],
   },
 });
